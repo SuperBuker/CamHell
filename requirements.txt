@@ -1,0 +1,9 @@
+git+git://github.com/censys/censys-python@2e89c5a #censys==0.1.0
+Flask==0.12.2
+Flask-Compress==1.4.0
+mysqlclient==1.3.12
+peewee==2.10.2
+requests==2.18.4
+shodan==1.7.7
+simplejson==3.13.2
+zoomeye==1.0.0
