@@ -69,14 +69,14 @@ The process complies the following guidelines:
 The third and last stage is **GeoProc**, currently our only postprocessor.
 This process formats the last wifiscan and sends it to Google Maps API Geolocation service; receiving the location of the camera in the 85% of the cases, and with an accuracy of around 40m. Then ask the Geocoding service for the street address of that location.
 The wifiscan is sent to Google only if the camera is new, or the last available record is older than 7 day. Also, the geolocations with a accuracy higher than 150m are discarded.
-If the Google geolocation service the process records the country based on the IP address using `http://ip2c.org` service.
+If the Google geolocation service fails, the process records the country based on the IP address using `http://ip2c.org` service.
 
 ## Controller
 The **ProcController** is the main process of the platform.
 Does the initial setup, launches and stops the feeders on demand and provisions PwnProcs and GeoProcs depending on the size of the multiprocessing queues.
 It also monitors the heartbeats of the PwnProcs, sending them a SIGALARM if they hang.
 
-For making easier the tunning of the "desired workers" formula, a LibreOffice Calc [file](https://github.com/SuperBuker/CamHell/tree/master/doc/worker_formula.ods) is available.
+For making easier the tunning of the "desired workers" formula, a LibreOffice Calc [file](https://github.com/SuperBuker/CamHell/tree/master/doc/workers_formula.ods) is available.
 
 ### API REST
 The ProcController API REST is a simple flask server runned by a thread; allowing monitoring and managing the different processes and feeders. All the responses are in JSON format.
@@ -152,11 +152,12 @@ The database chosen for development has been MariaDB. Due to the use of utf8mb4 
     innodb_file_per_table = 1
     innodb_large_prefix = 1
 
-	max_connections = 500
-	max_user_connections = 500
+    max_connections = 500
+    max_user_connections = 500
     
     [mysql]
     default-character-set = utf8mb4
+
 Addionally, an SQL scheme can be found in [scheme.sql](https://github.com/SuperBuker/CamHell/tree/master/doc/scheme.sql)
 ![SQL scheme](https://github.com/SuperBuker/CamHell/raw/master/doc/scheme.png)
 
