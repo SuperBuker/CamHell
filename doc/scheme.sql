@@ -14,13 +14,13 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 -- -----------------------------------------------------
 -- Schema idiots
 -- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `idiots` DEFAULT CHARACTER SET utf8mb4 ;
-USE `idiots` ;
+CREATE SCHEMA IF NOT EXISTS `camhell` DEFAULT CHARACTER SET utf8mb4 ;
+USE `camhell` ;
 
 -- -----------------------------------------------------
--- Table `idiots`.`camera`
+-- Table `camhell`.`camera`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`camera` (
+CREATE TABLE IF NOT EXISTS `camhell`.`camera` (
   `id` VARCHAR(255) NOT NULL,
   `mac` VARCHAR(255) NOT NULL,
   `wifimac` VARCHAR(255) NOT NULL,
@@ -34,9 +34,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`timestamp`
+-- Table `camhell`.`timestamp`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`timestamp` (
+CREATE TABLE IF NOT EXISTS `camhell`.`timestamp` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `date` DATETIME NOT NULL,
   PRIMARY KEY (`id`))
@@ -47,9 +47,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`address`
+-- Table `camhell`.`address`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`address` (
+CREATE TABLE IF NOT EXISTS `camhell`.`address` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `camera_id` VARCHAR(255) NOT NULL,
   `date_id` INT(11) NOT NULL,
@@ -60,10 +60,10 @@ CREATE TABLE IF NOT EXISTS `idiots`.`address` (
   INDEX `address_date_id` (`date_id` ASC),
   CONSTRAINT `address_ibfk_1`
     FOREIGN KEY (`camera_id`)
-    REFERENCES `idiots`.`camera` (`id`),
+    REFERENCES `camhell`.`camera` (`id`),
   CONSTRAINT `address_ibfk_2`
     FOREIGN KEY (`date_id`)
-    REFERENCES `idiots`.`timestamp` (`id`))
+    REFERENCES `camhell`.`timestamp` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 136574
 DEFAULT CHARACTER SET = utf8mb4
@@ -71,9 +71,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`credentials`
+-- Table `camhell`.`credentials`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`credentials` (
+CREATE TABLE IF NOT EXISTS `camhell`.`credentials` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `camera_id` VARCHAR(255) NOT NULL,
   `date_id` INT(11) NOT NULL,
@@ -88,10 +88,10 @@ CREATE TABLE IF NOT EXISTS `idiots`.`credentials` (
   INDEX `credentials_date_id` (`date_id` ASC),
   CONSTRAINT `credentials_ibfk_1`
     FOREIGN KEY (`camera_id`)
-    REFERENCES `idiots`.`camera` (`id`),
+    REFERENCES `camhell`.`camera` (`id`),
   CONSTRAINT `credentials_ibfk_2`
     FOREIGN KEY (`date_id`)
-    REFERENCES `idiots`.`timestamp` (`id`))
+    REFERENCES `camhell`.`timestamp` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 103479
 DEFAULT CHARACTER SET = utf8mb4
@@ -99,9 +99,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`ddns`
+-- Table `camhell`.`ddns`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`ddns` (
+CREATE TABLE IF NOT EXISTS `camhell`.`ddns` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `camera_id` VARCHAR(255) NOT NULL,
   `date_id` INT(11) NOT NULL,
@@ -117,10 +117,10 @@ CREATE TABLE IF NOT EXISTS `idiots`.`ddns` (
   INDEX `ddns_date_id` (`date_id` ASC),
   CONSTRAINT `ddns_ibfk_1`
     FOREIGN KEY (`camera_id`)
-    REFERENCES `idiots`.`camera` (`id`),
+    REFERENCES `camhell`.`camera` (`id`),
   CONSTRAINT `ddns_ibfk_2`
     FOREIGN KEY (`date_id`)
-    REFERENCES `idiots`.`timestamp` (`id`))
+    REFERENCES `camhell`.`timestamp` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 155000
 DEFAULT CHARACTER SET = utf8mb4
@@ -128,9 +128,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`ftp`
+-- Table `camhell`.`ftp`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`ftp` (
+CREATE TABLE IF NOT EXISTS `camhell`.`ftp` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `camera_id` VARCHAR(255) NOT NULL,
   `date_id` INT(11) NOT NULL,
@@ -146,10 +146,10 @@ CREATE TABLE IF NOT EXISTS `idiots`.`ftp` (
   INDEX `ftp_date_id` (`date_id` ASC),
   CONSTRAINT `ftp_ibfk_1`
     FOREIGN KEY (`camera_id`)
-    REFERENCES `idiots`.`camera` (`id`),
+    REFERENCES `camhell`.`camera` (`id`),
   CONSTRAINT `ftp_ibfk_2`
     FOREIGN KEY (`date_id`)
-    REFERENCES `idiots`.`timestamp` (`id`))
+    REFERENCES `camhell`.`timestamp` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 852795
 DEFAULT CHARACTER SET = utf8mb4
@@ -157,9 +157,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`location`
+-- Table `camhell`.`location`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`location` (
+CREATE TABLE IF NOT EXISTS `camhell`.`location` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `camera_id` VARCHAR(255) NOT NULL,
   `date_id` INT(11) NOT NULL,
@@ -179,10 +179,10 @@ CREATE TABLE IF NOT EXISTS `idiots`.`location` (
   INDEX `location_date_id` (`date_id` ASC),
   CONSTRAINT `location_ibfk_1`
     FOREIGN KEY (`camera_id`)
-    REFERENCES `idiots`.`camera` (`id`),
+    REFERENCES `camhell`.`camera` (`id`),
   CONSTRAINT `location_ibfk_2`
     FOREIGN KEY (`date_id`)
-    REFERENCES `idiots`.`timestamp` (`id`))
+    REFERENCES `camhell`.`timestamp` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 115872
 DEFAULT CHARACTER SET = utf8mb4
@@ -190,9 +190,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`mail`
+-- Table `camhell`.`mail`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`mail` (
+CREATE TABLE IF NOT EXISTS `camhell`.`mail` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `camera_id` VARCHAR(255) NOT NULL,
   `date_id` INT(11) NOT NULL,
@@ -212,10 +212,10 @@ CREATE TABLE IF NOT EXISTS `idiots`.`mail` (
   INDEX `mail_date_id` (`date_id` ASC),
   CONSTRAINT `mail_ibfk_1`
     FOREIGN KEY (`camera_id`)
-    REFERENCES `idiots`.`camera` (`id`),
+    REFERENCES `camhell`.`camera` (`id`),
   CONSTRAINT `mail_ibfk_2`
     FOREIGN KEY (`date_id`)
-    REFERENCES `idiots`.`timestamp` (`id`))
+    REFERENCES `camhell`.`timestamp` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 127148
 DEFAULT CHARACTER SET = utf8mb4
@@ -223,9 +223,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`smarteye`
+-- Table `camhell`.`smarteye`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`smarteye` (
+CREATE TABLE IF NOT EXISTS `camhell`.`smarteye` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `camera_id` VARCHAR(255) NOT NULL,
   `date_id` INT(11) NOT NULL,
@@ -242,10 +242,10 @@ CREATE TABLE IF NOT EXISTS `idiots`.`smarteye` (
   INDEX `smarteye_date_id` (`date_id` ASC),
   CONSTRAINT `smarteye_ibfk_1`
     FOREIGN KEY (`camera_id`)
-    REFERENCES `idiots`.`camera` (`id`),
+    REFERENCES `camhell`.`camera` (`id`),
   CONSTRAINT `smarteye_ibfk_2`
     FOREIGN KEY (`date_id`)
-    REFERENCES `idiots`.`timestamp` (`id`))
+    REFERENCES `camhell`.`timestamp` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 11730
 DEFAULT CHARACTER SET = utf8mb4
@@ -253,9 +253,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`status`
+-- Table `camhell`.`status`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`status` (
+CREATE TABLE IF NOT EXISTS `camhell`.`status` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `camera_id` VARCHAR(255) NOT NULL,
   `date_id` INT(11) NOT NULL,
@@ -270,10 +270,10 @@ CREATE TABLE IF NOT EXISTS `idiots`.`status` (
   INDEX `status_date_id` (`date_id` ASC),
   CONSTRAINT `status_ibfk_1`
     FOREIGN KEY (`camera_id`)
-    REFERENCES `idiots`.`camera` (`id`),
+    REFERENCES `camhell`.`camera` (`id`),
   CONSTRAINT `status_ibfk_2`
     FOREIGN KEY (`date_id`)
-    REFERENCES `idiots`.`timestamp` (`id`))
+    REFERENCES `camhell`.`timestamp` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 107994
 DEFAULT CHARACTER SET = utf8mb4
@@ -281,9 +281,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`wifi_scan`
+-- Table `camhell`.`wifi_scan`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`wifi_scan` (
+CREATE TABLE IF NOT EXISTS `camhell`.`wifi_scan` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `camera_id` VARCHAR(255) NOT NULL,
   `date_id` INT(11) NOT NULL,
@@ -293,10 +293,10 @@ CREATE TABLE IF NOT EXISTS `idiots`.`wifi_scan` (
   INDEX `wifi_scan_date_id` (`date_id` ASC),
   CONSTRAINT `wifi_scan_ibfk_1`
     FOREIGN KEY (`camera_id`)
-    REFERENCES `idiots`.`camera` (`id`),
+    REFERENCES `camhell`.`camera` (`id`),
   CONSTRAINT `wifi_scan_ibfk_2`
     FOREIGN KEY (`date_id`)
-    REFERENCES `idiots`.`timestamp` (`id`))
+    REFERENCES `camhell`.`timestamp` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 1450493
 DEFAULT CHARACTER SET = utf8mb4
@@ -304,9 +304,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`wifi`
+-- Table `camhell`.`wifi`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`wifi` (
+CREATE TABLE IF NOT EXISTS `camhell`.`wifi` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `scan_id` INT(11) NOT NULL,
   `ssid` VARCHAR(255) NOT NULL,
@@ -320,7 +320,7 @@ CREATE TABLE IF NOT EXISTS `idiots`.`wifi` (
   INDEX `wifi_scan_id` (`scan_id` ASC),
   CONSTRAINT `wifi_ibfk_1`
     FOREIGN KEY (`scan_id`)
-    REFERENCES `idiots`.`wifi_scan` (`id`))
+    REFERENCES `camhell`.`wifi_scan` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 16248362
 DEFAULT CHARACTER SET = utf8mb4
@@ -328,9 +328,9 @@ ROW_FORMAT = DYNAMIC;
 
 
 -- -----------------------------------------------------
--- Table `idiots`.`wifi_ap`
+-- Table `camhell`.`wifi_ap`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `idiots`.`wifi_ap` (
+CREATE TABLE IF NOT EXISTS `camhell`.`wifi_ap` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `scan_id` INT(11) NOT NULL,
   `ssid` VARCHAR(255) NOT NULL,
@@ -343,7 +343,7 @@ CREATE TABLE IF NOT EXISTS `idiots`.`wifi_ap` (
   INDEX `wifi_ap_scan_id` (`scan_id` ASC),
   CONSTRAINT `wifi_ap_ibfk_1`
     FOREIGN KEY (`scan_id`)
-    REFERENCES `idiots`.`wifi_scan` (`id`))
+    REFERENCES `camhell`.`wifi_scan` (`id`))
 ENGINE = InnoDB
 AUTO_INCREMENT = 108990
 DEFAULT CHARACTER SET = utf8mb4

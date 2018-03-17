@@ -17,7 +17,7 @@ Also, as a customer and owner of an affected product, I wanted to know how many 
 
 # Architecture
 ![CamHell architecture](https://github.com/SuperBuker/CamHell/raw/master/doc/architecture.png)
-CamHell is composed by three stages: Feeders, PwnProc, and GeoProc, connected through multiprocessing pipes and leaded by a the ProcController.
+CamHell is composed by three stages: Feeders, PwnProc, and GeoProc, connected through multiprocessing pipes and leaded by the ProcController.
 
 ## Feeders
 The first stage is composed by the feeders: Shodan, Censys, ZoomEye, Local Database and SmartEye.
@@ -26,7 +26,7 @@ The online crawlers work as external source of camera candidates. The Local Data
 
 ### Shodan
 Shodan, our european crawler, offers two kind of services: regular queries and real-time stream. Each one has his own feeder. Both services require a valid user API key.
-**ShodanProc** asks Shodan services how many host are available in their database, then launches as many **ShodanWorkers** to assign up to 100 pages (each one with 100 host) to each one; finally enters in token-bucket mode, synchronizing the worker queries. It's not allowed to send more than 1 request/s, but multiple workers can be waiting for a reply at the same time. It's quite common that Shodan doesn't reply (and sdk throws a timeout) or replies with 0 hosts. In those cases, the previous request is automatically resent.
+**ShodanProc** asks Shodan services how many host are available in their database, then launches as many **ShodanWorkers** to assign up to 100 pages (each one with 100 host) to each one; finally enters in token-bucket mode, synchronizing the workers queries. It's not allowed to send more than 1 request/s, but multiple workers can be waiting for a reply at the same time. It's quite common that Shodan doesn't reply (and sdk throws a timeout) or replies with 0 hosts. In those cases, the previous request is automatically resent.
 **ShodanStreamProc** subscribes to a kind of NMAP data stream, then filters the given results locally. It is possible to launch as ShodanStreamProcs as desired, but currently it's not possible to check duplicated hosts in the processing queues, so be careful.
 It's important to notice that both feeders only put in their feeding queue those hosts who are not currently set as active in database.
 
@@ -92,7 +92,7 @@ The ProcController API REST is a simple flask server runned by a thread; allowin
 **GET log:** Last 10 feeders launched or stopped
 
     $ curl  -X GET 'http://localhost:3000/status'
-   
+
 **POST start feeder:** Start a certain feeder
 
     $ curl -H "Feeder: $FEEDER" -X POST 'http://localhost:3000/start_feeder'
@@ -109,9 +109,9 @@ The ProcController API REST is a simple flask server runned by a thread; allowin
 ### Automation and Hooks
 In order to simplify the user interaction with the controller through API REST multiple bash scripts have been preconfigured and are available in the [hooks](https://github.com/SuperBuker/CamHell/tree/master/hooks) directory.
 
- - `$ ./hooks/status.sh` ⇒ GET status 
- - `$ ./hooks/start.sh $1` ⇒ POST start feeder $1 
- - `$ ./hooks/stop.sh $1` ⇒ POST stop feeder $1. 
+ - `$ ./hooks/status.sh` ⇒ GET status
+ - `$ ./hooks/start.sh $1` ⇒ POST start feeder $1
+ - `$ ./hooks/stop.sh $1` ⇒ POST stop feeder $1.
  - `$  ./hooks/start_feeder.sh $1` ⇒ GET status + POST start feeder $1 if
    not currently running
  - `$ ./hooks/start_shodan.sh` ⇒ GET status + POST    start shodan if not running and queue < $1
@@ -133,7 +133,7 @@ CamHell requieres Python 3 and the following packages:
 
 For automatic dependencies instalation execute:
 
-    $ pip install -r requirements.txt 
+    $ pip install -r requirements.txt
 
 ## API keys
 Google API, Shodan, Censys and ZoomEye requiere a valid user API key. The almost mandatory ones are Google and Shodan, but the final decision relies on the final user. Those API Keys are currently defined as variables at the beginning of the `processmodel.py`.
@@ -144,7 +144,7 @@ The database chosen for development has been MariaDB. Due to the use of utf8mb4 
 
     [client]
     default-character-set = utf8mb4
-    
+
     [mysqld]
     collation_server = utf8mb4_unicode_ci
     character_set_server = utf8mb4
@@ -154,7 +154,7 @@ The database chosen for development has been MariaDB. Due to the use of utf8mb4 
 
     max_connections = 500
     max_user_connections = 500
-    
+
     [mysql]
     default-character-set = utf8mb4
 
@@ -164,7 +164,7 @@ Addionally, an SQL scheme can be found in [scheme.sql](https://github.com/SuperB
 The chosen server should be defined in the configuration of the database, located just at the beginning of the `model.py`.
 Also, the scripts `utils/mysql_{monitor,reset_db}.sh` make easier the management and visualization of the DB; both expect the database name as first argument.
 
-Finally, even if the datamodel was written in Peewee, in order to allow compatibility with other databases, that was broken due to some "custom queries" specific for MariaDB. In theory, PostgreSQL still is a valid alternative, but will require changing the Peewee SQL driver, and modifying the specific MariaDB queries.
+Finally, even if the datamodel was written in Peewee, in order to allow compatibility with other databases, that feature was broken due to some "custom queries" specific for MariaDB. In theory, PostgreSQL still is a valid alternative, but will require changing the Peewee SQL driver, and modifying the specific MariaDB queries.
 
 ## Cron setup
 The best and simplest way I found to setup a tunable logic in the ProcController was to run some preconfigured scripts periodically, using cron.
@@ -177,7 +177,7 @@ This is my cron config:
     55 11 * * *  bash '/pathtocamhell/hooks/start_feeder.sh' SmartEyeDBProc
     */15 * * * *  bash '/pathtocamhell/hooks/start_shodan.sh' 30000
 
-This setup is just an example, it might change if newer feeder or custom feeders are added to the current processing architecture.
+This setup is just an example, it might change if newer or custom feeders are added to the current processing architecture.
 
 ## Start
 For starting the platform just execute:
@@ -201,7 +201,7 @@ The current platform is enough flexible to accept custom inputs. Also, the PwnPr
  - FOFA feeder, requires translation
  - Support for country selection on CensysProc and ZoomEyeProc or deletion of country support in ShodanProc
  - Bug fixes, and more bug fixes ;)
- 
+
 # Last thoughts
 As you can see, CamHell is a powerful tool, that should have never been made; but here it is.
 
@@ -211,8 +211,6 @@ We can not buy a $15 IP camera and expect the support of a $200 one. In the end 
 
 Happy hunting!
 
-
-  
 # License
 
 The software is available as open source under the terms of the [GPLv3](https://opensource.org/licenses/GPL-3.0).
