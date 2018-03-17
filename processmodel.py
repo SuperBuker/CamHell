@@ -1,7 +1,7 @@
 from model import *
 from peewee import OperationalError, ProgrammingError
 from playhouse.pool import MaxConnectionsExceeded
-from multiprocessing import Process, Pool, Queue, Event, Value
+from multiprocessing import Process, Pool, Queue, Value
 from queue import Empty, Full
 import sys
 from json import dumps as json_dumps
@@ -629,7 +629,7 @@ class SmartEyeBase(FeederBase):
             return None
 
     def secure_get(se):
-        """Securte GET function, returns forward URL in response header
+        """Secure GET function, returns forward URL in response header
         Destination domain is fixed and then the header is modified to match the subdomain, this reduces the DNS queries"""
 
         for _ in range(network_retries):
@@ -1088,7 +1088,7 @@ class PwnProc(Process):
         except UnicodeDecodeError:
             self.myprint('Host %s:%s responded with non UTF-8 format' %
                          (protocam.ip, protocam.port))
-        except BadStatusLine:
+        except (ConnectionResetError, BadStatusLine):
             self.myprint('Host %s:%s responded rubbish' %
                          (protocam.ip, protocam.port))
         except socket.timeout:
