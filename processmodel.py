@@ -36,7 +36,7 @@ import codecs
 
 # TOR cfg
 proxies = {
-    'http': 'socks5://host:9050'
+    'http': 'socks5://host:9050',
     'https': 'socks5://host:9050'
 }
 proxyurl = urlparse(proxies['http'])
