@@ -676,7 +676,7 @@ class SmartEyeDBProc(SmartEyeBase):
             h_counter = [0, 0, 0]
             for host in hosts:
 
-                h_counter[self.checkAndSubmit(host[0], host[1], 2)] += 1
+                h_counter[self.checkAndSubmit(host[0], host[1], 1)] += 1
 
             self.myprint('Result batch %s: %s of %s hosts [%s new, %s online, %s offline], last subdomain: %s' % (
                 c_counter, sum(h_counter), 100, h_counter[0], h_counter[1], h_counter[2], l_host))
@@ -721,7 +721,7 @@ class SmartEyeProc(SmartEyeBase):
             h_counter = [0, 0, 0]
             for host in hosts:
 
-                h_counter[self.checkAndSubmit(host[0], host[1], 3)] += 1
+                h_counter[self.checkAndSubmit(host[0], host[1], 2)] += 1
 
             self.myprint('Result batch %s: %s of %s hosts [%s new, %s online, %s offline], last subdomain: %s' % (
                 c_counter, sum(h_counter), 100, h_counter[0], h_counter[1], h_counter[2], l_host))
