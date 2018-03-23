@@ -14,4 +14,4 @@ reset
 
 echo -e "Reading: logs/log_$LFILE$SUF.log\n"
 
-tail -f "logs/log_$LFILE$SUF.log" | grep --line-buffered '^[ProcController]'
+tail -f "logs/log_$LFILE$SUF.log" | grep --line-buffered '^\[ProcController\]'
