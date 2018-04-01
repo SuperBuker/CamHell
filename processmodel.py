@@ -639,7 +639,7 @@ class SmartEyeBase(FeederBase):
                 sys.stdout.flush()
                 sleep(network_sleep)
             except requests.exceptions.ConnectionError:
-                print('[SmartEye-X] Host %s Down' % (url))
+                print('[SmartEye-X] Host %s Down' % (se['service']))
                 sys.stdout.flush()
                 sleep(network_sleep)
         return None
